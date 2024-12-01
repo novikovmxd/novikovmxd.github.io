@@ -1,16 +1,47 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Telegram WebApp</title>
-  <!-- Подключаем Telegram WebApp API -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Подключаем свой JavaScript -->
-  <script src="app.js" defer></script>
+  <title>Отзывы</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Добро пожаловать!</h1>
-  <p id="greeting">Загрузка...</p>
+  <!-- Переключатели вкладок -->
+  <div class="filter">
+    <button class="filter-btn active" data-filter="all">Все · 72</button>
+    <button class="filter-btn" data-filter="positive">👍 72</button>
+    <button class="filter-btn" data-filter="negative">👎 0</button>
+  </div>
+
+  <!-- Список отзывов -->
+  <div class="reviews">
+    <div class="review" data-type="positive">
+      <div class="review-avatar">B</div>
+      <div class="review-info">
+        <h4>Baton</h4>
+        <p>1 декабря в 13:13</p>
+        <span class="review-status positive">положительный</span>
+      </div>
+    </div>
+    <div class="review" data-type="positive">
+      <div class="review-avatar">N</div>
+      <div class="review-info">
+        <h4>NaCherhyheJivy</h4>
+        <p>29 ноября в 18:57</p>
+        <span class="review-status positive">положительный</span>
+      </div>
+    </div>
+    <div class="review" data-type="negative">
+      <div class="review-avatar">X</div>
+      <div class="review-info">
+        <h4>Xylic Firefly</h4>
+        <p>29 ноября в 17:13</p>
+        <span class="review-status negative">отрицательный</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
