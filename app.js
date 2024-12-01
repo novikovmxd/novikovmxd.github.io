@@ -1,26 +1,26 @@
-if (window.Telegram?.WebApp) {
-  const tg = window.Telegram.WebApp;
+// Получаем кнопки фильтра и все отзывы
+const filterButtons = document.querySelectorAll('.filter-btn');
+const reviews = document.querySelectorAll('.review');
 
-  // Уведомляем Telegram, что WebApp готов
-  tg.ready();
+// Добавляем обработчик клика на кнопки
+filterButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    // Убираем "active" со всех кнопок
+    filterButtons.forEach(btn => btn.classList.remove('active'));
+    // Добавляем "active" на выбранную кнопку
+    button.classList.add('active');
 
-  // Проверяем, есть ли данные о пользователе
-  const user = tg.initDataUnsafe?.user;
+    // Получаем тип фильтра из атрибута data-filter
+    const filterType = button.getAttribute('data-filter');
 
-  if (user) {
-    // Если данные есть, отображаем имя пользователя
-    const username = user.username || `${user.first_name || ""} ${user.last_name || ""}`.trim() || "Гость";
-    document.getElementById("greeting").textContent = `Привет, ${username}!`;
-  } else {
-    // Данных нет, показываем сообщение
-    document.getElementById("greeting").textContent = "Привет, Гость!";
-  }
-
-  // Настраиваем главную кнопку Telegram
-  tg.MainButton.text = "Открыть отзывы";
-  tg.MainButton.show();
-} else {
-  // Если WebApp API недоступен
-  console.error("Telegram WebApp API не работает.");
-  document.getElementById("greeting").textContent = "Ошибка: откройте приложение через Telegram.";
-}
+    // Показываем/скрываем отзывы в зависимости от типа
+    reviews.forEach(review => {
+      const reviewType = review.getAttribute('data-type');
+      if (filterType === 'all' || filterType === reviewType) {
+        review.style.display = 'flex';
+      } else {
+        review.style.display = 'none';
+      }
+    });
+  });
+});
