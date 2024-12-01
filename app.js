@@ -1,26 +1,26 @@
-// Проверяем поддержку WebApp API
 if (window.Telegram?.WebApp) {
   const tg = window.Telegram.WebApp;
 
-  // Инициализация WebApp
-  tg.ready(); // Уведомляем Telegram, что WebApp готов
+  // Уведомляем Telegram, что WebApp готов
+  tg.ready();
 
-  // Получаем данные пользователя
+  // Проверяем, есть ли данные о пользователе
   const user = tg.initDataUnsafe?.user;
 
   if (user) {
-    // Если пользователь авторизован, показываем его имя
-    const username = user.username || `${user.first_name} ${user.last_name}` || "Гость";
+    // Если данные есть, отображаем имя пользователя
+    const username = user.username || `${user.first_name || ""} ${user.last_name || ""}`.trim() || "Гость";
     document.getElementById("greeting").textContent = `Привет, ${username}!`;
   } else {
-    // Если данных нет
+    // Данных нет, показываем сообщение
     document.getElementById("greeting").textContent = "Привет, Гость!";
   }
 
-  // Настраиваем главную кнопку
+  // Настраиваем главную кнопку Telegram
   tg.MainButton.text = "Открыть отзывы";
   tg.MainButton.show();
 } else {
-  console.error("WebApp не поддерживается. Проверьте запуск через Telegram.");
+  // Если WebApp API недоступен
+  console.error("Telegram WebApp API не работает.");
   document.getElementById("greeting").textContent = "Ошибка: откройте приложение через Telegram.";
 }
