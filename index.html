@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Оформление возврата</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--tg-theme-bg-color, #ffffff);
+      color: var(--tg-theme-text-color, #000000);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--tg-theme-secondary-bg-color, #f2f2f7);
+      border-radius: 16px;
+      padding: 24px 20px;
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--tg-theme-text-color, #000000);
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--tg-theme-hint-color, #8e8e93);
+      margin-bottom: 24px;
+      line-height: 1.4;
+    }
+
+    /* XTR block */
+    .xtr-info {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .xtr-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--tg-theme-button-color, #2481cc);
+      color: var(--tg-theme-button-text-color, #ffffff);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .xtr-note {
+      font-size: 13px;
+      color: var(--tg-theme-hint-color, #8e8e93);
+      line-height: 1.5;
+    }
+
+    /* Form fields */
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--tg-theme-hint-color, #8e8e93);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .field input {
+      background: var(--tg-theme-bg-color, #ffffff);
+      border: 1.5px solid transparent;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 15px;
+      color: var(--tg-theme-text-color, #000000);
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+
+    .field input::placeholder {
+      color: var(--tg-theme-hint-color, #c7c7cc);
+    }
+
+    .field input:focus {
+      border-color: var(--tg-theme-button-color, #2481cc);
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--tg-theme-button-color, #2481cc);
+      color: var(--tg-theme-button-text-color, #ffffff);
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      margin-top: 8px;
+    }
+
+    .submit-btn:active {
+      opacity: 0.75;
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Error */
+    .error-msg {
+      font-size: 13px;
+      color: #ff3b30;
+      margin-top: -10px;
+      margin-bottom: 10px;
+      display: none;
+    }
+
+    /* Success overlay */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--tg-theme-bg-color, #ffffff);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px;
+      text-align: center;
+      z-index: 100;
+    }
+
+    .overlay.visible {
+      display: flex;
+    }
+
+    .overlay-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+
+    .overlay-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--tg-theme-text-color, #000000);
+    }
+
+    .overlay-text {
+      font-size: 15px;
+      color: var(--tg-theme-hint-color, #8e8e93);
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card" id="formCard">
+    <div class="title">Оформление возврата</div>
+    <div class="subtitle" id="subtitleText"></div>
+
+    <!-- XTR view -->
+    <div class="xtr-info" id="xtrBlock" style="display:none;">
+      <div class="xtr-badge">⭐ Telegram Stars</div>
+      <div class="xtr-note">
+        Платёж был произведён в Telegram Stars. Нажмите кнопку ниже, чтобы подать заявку на возврат. Поддержка рассмотрит её в течение 24 часов.
+      </div>
+    </div>
+
+    <!-- RUB/other view -->
+    <div id="ruForm">
+      <div class="field">
+        <label>Номер карты или телефон (СБП)</label>
+        <input type="text" id="requisites" placeholder="4276 1234 5678 9012 или +79001234567" inputmode="text" />
+      </div>
+      <div class="error-msg" id="reqError">Введите номер карты или телефон</div>
+
+      <div class="field">
+        <label>Название банка</label>
+        <input type="text" id="bank" placeholder="Сбербанк, Тинькофф, ВТБ..." />
+      </div>
+      <div class="error-msg" id="bankError">Введите название банка</div>
+    </div>
+
+    <button class="submit-btn" id="submitBtn">Отправить заявку</button>
+  </div>
+
+  <!-- Success overlay -->
+  <div class="overlay" id="successOverlay">
+    <div class="overlay-icon">✅</div>
+    <div class="overlay-title">Заявка отправлена</div>
+    <div class="overlay-text">Возврат средств оформлен. Ожидание в течении 24х часов после отправки.</div>
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+
+    const params = new URLSearchParams(window.location.search);
+    const currency = params.get('currency') || '';
+    const orderId = params.get('order_id') || '';
+
+    const xtrBlock = document.getElementById('xtrBlock');
+    const ruForm = document.getElementById('ruForm');
+    const subtitleText = document.getElementById('subtitleText');
+
+    if (currency === 'XTR') {
+      subtitleText.textContent = `Заказ #${orderId} · ⭐ Telegram Stars`;
+      xtrBlock.style.display = 'flex';
+      ruForm.style.display = 'none';
+    } else {
+      const label = currency === 'UAH' ? 'UAH' : currency || 'RUB';
+      subtitleText.textContent = `Заказ #${orderId} · ${label}`;
+      xtrBlock.style.display = 'none';
+      ruForm.style.display = 'block';
+    }
+
+    document.getElementById('submitBtn').addEventListener('click', function () {
+      const btn = this;
+
+      if (currency !== 'XTR') {
+        const req = document.getElementById('requisites').value.trim();
+        const bnk = document.getElementById('bank').value.trim();
+        const reqErr = document.getElementById('reqError');
+        const bankErr = document.getElementById('bankError');
+
+        let valid = true;
+
+        if (!req) {
+          reqErr.style.display = 'block';
+          valid = false;
+        } else {
+          reqErr.style.display = 'none';
+        }
+
+        if (!bnk) {
+          bankErr.style.display = 'block';
+          valid = false;
+        } else {
+          bankErr.style.display = 'none';
+        }
+
+        if (!valid) return;
+
+        const payload = JSON.stringify({
+          order_id: orderId,
+          currency: currency,
+          requisites: req,
+          bank: bnk
+        });
+
+        tg.sendData(payload);
+      } else {
+        const payload = JSON.stringify({
+          order_id: orderId,
+          currency: 'XTR'
+        });
+
+        tg.sendData(payload);
+      }
+
+      btn.disabled = true;
+      document.getElementById('successOverlay').classList.add('visible');
+
+      setTimeout(function () {
+        tg.close();
+      }, 2500);
+    });
+  </script>
+</body>
+</html>
