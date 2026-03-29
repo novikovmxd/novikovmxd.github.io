@@ -1,296 +1,374 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Оформление возврата</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Возврат средств</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg: var(--tg-theme-bg-color, #282e33);
+            --secondary-bg: var(--tg-theme-secondary-bg-color, #313b43);
+            --text: var(--tg-theme-text-color, #f5f5f5);
+            --hint: var(--tg-theme-hint-color, #82868a);
+            --link: var(--tg-theme-link-color, #4be1c3);
+            --accent: var(--tg-theme-accent-text-color, #79e8da);
+            --button: var(--tg-theme-button-color, #3fc1b0);
+            --button-text: var(--tg-theme-button-text-color, #ffffff);
+            --section-separator: var(--tg-theme-section-separator-color, #242a2e);
+            --header-bg: var(--tg-theme-header-bg-color, #282e33);
+            --section-bg: var(--tg-theme-section-bg-color, #282e33);
+            --subtitle: var(--tg-theme-subtitle-text-color, #82868a);
+        }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--tg-theme-bg-color, #ffffff);
-      color: var(--tg-theme-text-color, #000000);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    .card {
-      width: 100%;
-      max-width: 420px;
-      background: var(--tg-theme-secondary-bg-color, #f2f2f7);
-      border-radius: 16px;
-      padding: 24px 20px;
-    }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            min-height: 100vh;
+        }
 
-    .title {
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: var(--tg-theme-text-color, #000000);
-    }
+        .app {
+            max-width: 480px;
+            margin: 0 auto;
+        }
 
-    .subtitle {
-      font-size: 14px;
-      color: var(--tg-theme-hint-color, #8e8e93);
-      margin-bottom: 24px;
-      line-height: 1.4;
-    }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
 
-    /* XTR block */
-    .xtr-info {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
+        /* ===== HEADER ===== */
+        .header-widget {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 32px 16px 28px;
+            text-align: center;
+            background: var(--secondary-bg);
+            animation: fadeInUp 0.3s ease both;
+        }
 
-    .xtr-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--tg-theme-button-color, #2481cc);
-      color: var(--tg-theme-button-text-color, #ffffff);
-      border-radius: 12px;
-      padding: 12px 16px;
-      font-size: 15px;
-      font-weight: 600;
-    }
+        .header-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+        }
 
-    .xtr-note {
-      font-size: 13px;
-      color: var(--tg-theme-hint-color, #8e8e93);
-      line-height: 1.5;
-    }
+        .icon-rub  { background: linear-gradient(135deg, #53edd6 0%, #28c9b7 100%); }
+        .icon-xtr  { background: linear-gradient(135deg, #ffcd6a 0%, #ffa85c 100%); }
 
-    /* Form fields */
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 16px;
-    }
+        .header-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text);
+            line-height: 1.3;
+        }
 
-    .field label {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--tg-theme-hint-color, #8e8e93);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
+        .header-subtitle {
+            font-size: 15px;
+            color: var(--hint);
+            line-height: 1.4;
+        }
 
-    .field input {
-      background: var(--tg-theme-bg-color, #ffffff);
-      border: 1.5px solid transparent;
-      border-radius: 10px;
-      padding: 12px 14px;
-      font-size: 15px;
-      color: var(--tg-theme-text-color, #000000);
-      outline: none;
-      transition: border-color 0.2s;
-      width: 100%;
-    }
+        /* ===== XTR NOTE ===== */
+        .xtr-note {
+            font-size: 15px;
+            color: var(--subtitle);
+            line-height: 1.55;
+            padding: 20px 20px 4px;
+            text-align: center;
+            animation: fadeInUp 0.3s ease 0.08s both;
+        }
 
-    .field input::placeholder {
-      color: var(--tg-theme-hint-color, #c7c7cc);
-    }
+        /* ===== FORM ===== */
+        .form-section {
+            padding: 20px 16px 0;
+            animation: fadeInUp 0.3s ease 0.1s both;
+        }
 
-    .field input:focus {
-      border-color: var(--tg-theme-button-color, #2481cc);
-    }
+        .field-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--hint);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            padding: 0 4px 7px;
+        }
 
-    .submit-btn {
-      width: 100%;
-      padding: 14px;
-      background: var(--tg-theme-button-color, #2481cc);
-      color: var(--tg-theme-button-text-color, #ffffff);
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.15s;
-      margin-top: 8px;
-    }
+        .field-group {
+            background: var(--secondary-bg);
+            border-radius: 12px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
 
-    .submit-btn:active {
-      opacity: 0.75;
-    }
+        .field-input {
+            width: 100%;
+            padding: 13px 16px;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-size: 16px;
+            font-family: inherit;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    .submit-btn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
+        .field-input::placeholder {
+            color: var(--hint);
+        }
 
-    /* Error */
-    .error-msg {
-      font-size: 13px;
-      color: #ff3b30;
-      margin-top: -10px;
-      margin-bottom: 10px;
-      display: none;
-    }
+        .field-divider {
+            height: 1px;
+            background: var(--section-separator);
+            margin: 0 16px;
+        }
 
-    /* Success overlay */
-    .overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: var(--tg-theme-bg-color, #ffffff);
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 32px 24px;
-      text-align: center;
-      z-index: 100;
-    }
+        .error-msg {
+            font-size: 13px;
+            color: #ff5252;
+            padding: 3px 4px 10px;
+            display: none;
+        }
 
-    .overlay.visible {
-      display: flex;
-    }
+        /* ===== SUBMIT ===== */
+        .submit-wrap {
+            padding: 8px 16px 32px;
+            animation: fadeInUp 0.3s ease 0.18s both;
+        }
 
-    .overlay-icon {
-      font-size: 64px;
-      margin-bottom: 20px;
-    }
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--button);
+            color: var(--button-text);
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: transform 0.15s, opacity 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    .overlay-title {
-      font-size: 22px;
-      font-weight: 700;
-      margin-bottom: 12px;
-      color: var(--tg-theme-text-color, #000000);
-    }
+        .submit-btn:active  { transform: scale(0.97); opacity: 0.8; }
+        .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-    .overlay-text {
-      font-size: 15px;
-      color: var(--tg-theme-hint-color, #8e8e93);
-      line-height: 1.5;
-    }
-  </style>
+        /* ===== SUCCESS OVERLAY ===== */
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 24px;
+            text-align: center;
+            z-index: 100;
+        }
+
+        .overlay.visible {
+            display: flex;
+            animation: fadeInUp 0.3s ease both;
+        }
+
+        .overlay-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6dd98e 0%, #35c759 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+        }
+
+        .overlay-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text);
+            line-height: 1.3;
+        }
+
+        .overlay-text {
+            font-size: 15px;
+            color: var(--subtitle);
+            line-height: 1.55;
+        }
+
+        /* ===== BLOCKED ===== */
+        .blocked {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 32px 24px;
+            text-align: center;
+            animation: fadeInUp 0.3s ease both;
+        }
+
+        .blocked-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6e7a84 0%, #4a545c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+        }
+
+        .blocked-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text);
+            line-height: 1.3;
+        }
+
+        .blocked-text {
+            font-size: 15px;
+            color: var(--hint);
+            line-height: 1.55;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+    </style>
 </head>
 <body>
+    <div class="app" id="app"></div>
 
-  <div class="card" id="formCard">
-    <div class="title">Оформление возврата</div>
-    <div class="subtitle" id="subtitleText"></div>
-
-    <!-- XTR view -->
-    <div class="xtr-info" id="xtrBlock" style="display:none;">
-      <div class="xtr-badge">⭐ Telegram Stars</div>
-      <div class="xtr-note">
-        Платёж был произведён в Telegram Stars. Нажмите кнопку ниже, чтобы подать заявку на возврат. Поддержка рассмотрит её в течение 24 часов.
-      </div>
+    <!-- Success overlay -->
+    <div class="overlay" id="successOverlay">
+        <div class="overlay-icon">✅</div>
+        <div class="overlay-title">Заявка отправлена</div>
+        <div class="overlay-text">Заявка принята.<br>Среднее время обработки — до 24 часов.</div>
     </div>
 
-    <!-- RUB/other view -->
-    <div id="ruForm">
-      <div class="field">
-        <label>Номер карты или телефон (СБП)</label>
-        <input type="text" id="requisites" placeholder="4276 1234 5678 9012 или +79001234567" inputmode="text" />
-      </div>
-      <div class="error-msg" id="reqError">Введите номер карты или телефон</div>
+    <script>
+        const tg = window.Telegram && window.Telegram.WebApp;
 
-      <div class="field">
-        <label>Название банка</label>
-        <input type="text" id="bank" placeholder="Сбербанк, Тинькофф, ВТБ..." />
-      </div>
-      <div class="error-msg" id="bankError">Введите название банка</div>
-    </div>
-
-    <button class="submit-btn" id="submitBtn">Отправить заявку</button>
-  </div>
-
-  <!-- Success overlay -->
-  <div class="overlay" id="successOverlay">
-    <div class="overlay-icon">✅</div>
-    <div class="overlay-title">Заявка отправлена</div>
-    <div class="overlay-text">Возврат средств оформлен. Ожидание в течении 24х часов после отправки.</div>
-  </div>
-
-  <script>
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
-
-    const params = new URLSearchParams(window.location.search);
-    const currency = params.get('currency') || '';
-    const orderId = params.get('order_id') || '';
-
-    const xtrBlock = document.getElementById('xtrBlock');
-    const ruForm = document.getElementById('ruForm');
-    const subtitleText = document.getElementById('subtitleText');
-
-    if (currency === 'XTR') {
-      subtitleText.textContent = `Заказ #${orderId} · ⭐ Telegram Stars`;
-      xtrBlock.style.display = 'flex';
-      ruForm.style.display = 'none';
-    } else {
-      const label = currency === 'UAH' ? 'UAH' : currency || 'RUB';
-      subtitleText.textContent = `Заказ #${orderId} · ${label}`;
-      xtrBlock.style.display = 'none';
-      ruForm.style.display = 'block';
-    }
-
-    document.getElementById('submitBtn').addEventListener('click', function () {
-      const btn = this;
-
-      if (currency !== 'XTR') {
-        const req = document.getElementById('requisites').value.trim();
-        const bnk = document.getElementById('bank').value.trim();
-        const reqErr = document.getElementById('reqError');
-        const bankErr = document.getElementById('bankError');
-
-        let valid = true;
-
-        if (!req) {
-          reqErr.style.display = 'block';
-          valid = false;
-        } else {
-          reqErr.style.display = 'none';
+        if (!tg || !tg.initData) {
+            document.getElementById('app').innerHTML = `
+                <div class="blocked">
+                    <div class="blocked-icon">🔒</div>
+                    <div class="blocked-title">Доступ запрещён</div>
+                    <div class="blocked-text">Эта страница доступна только<br>через Telegram Mini App.</div>
+                </div>
+            `;
+            throw new Error('Not a Telegram Mini App');
         }
 
-        if (!bnk) {
-          bankErr.style.display = 'block';
-          valid = false;
-        } else {
-          bankErr.style.display = 'none';
+        tg.ready();
+        tg.expand();
+        tg.setHeaderColor('secondary_bg_color');
+        tg.setBackgroundColor('bg_color');
+
+        function haptic(type) {
+            if (tg && tg.HapticFeedback) {
+                if (type === 'light')  tg.HapticFeedback.impactOccurred('light');
+                if (type === 'error')  tg.HapticFeedback.notificationOccurred('error');
+                if (type === 'success') tg.HapticFeedback.notificationOccurred('success');
+            }
         }
 
-        if (!valid) return;
+        const params   = new URLSearchParams(window.location.search);
+        const currency = params.get('currency') || '';
+        const orderId  = params.get('order_id') || '';
+        const isXtr    = currency === 'XTR';
 
-        const payload = JSON.stringify({
-          order_id: orderId,
-          currency: currency,
-          requisites: req,
-          bank: bnk
+        const currencyLabel = isXtr ? '⭐ Telegram Stars' : (currency || 'RUB');
+
+        document.getElementById('app').innerHTML = `
+            <div class="header-widget">
+                <div class="header-icon ${isXtr ? 'icon-xtr' : 'icon-rub'}">${isXtr ? '⭐' : '💳'}</div>
+                <div class="header-title">Оформление возврата</div>
+                <div class="header-subtitle">Заказ #${orderId} &middot; ${currencyLabel}</div>
+            </div>
+
+            ${isXtr ? `
+                <div class="xtr-note">
+                    Платёж был произведён в Telegram Stars.<br>
+                    Нажмите кнопку, чтобы подать заявку&nbsp;&mdash;<br>
+                    поддержка рассмотрит её в течение 24&nbsp;часов.
+                </div>
+                <div class="submit-wrap" style="padding-top:24px">
+                    <button class="submit-btn" id="submitBtn">Подать заявку</button>
+                </div>
+            ` : `
+                <div class="form-section">
+                    <div class="field-label">Номер карты или СБП</div>
+                    <div class="field-group">
+                        <input class="field-input" id="requisites" type="text"
+                            placeholder="4276 1234 5678 9012 или +79001234567"
+                            inputmode="text" autocomplete="off" />
+                    </div>
+                    <div class="error-msg" id="reqError">Введите номер карты или СБП</div>
+
+                    <div class="field-label">Название банка</div>
+                    <div class="field-group">
+                        <input class="field-input" id="bank" type="text"
+                            placeholder="Сбербанк, Т-Банк, ВТБ..."
+                            autocomplete="off" />
+                    </div>
+                    <div class="error-msg" id="bankError">Введите название банка</div>
+                </div>
+                <div class="submit-wrap">
+                    <button class="submit-btn" id="submitBtn">Отправить заявку</button>
+                </div>
+            `}
+        `;
+
+        document.getElementById('submitBtn').addEventListener('click', function () {
+            if (!isXtr) {
+                const req     = document.getElementById('requisites').value.trim();
+                const bnk     = document.getElementById('bank').value.trim();
+                const reqErr  = document.getElementById('reqError');
+                const bankErr = document.getElementById('bankError');
+                let valid = true;
+
+                if (!req) { reqErr.style.display  = 'block'; valid = false; }
+                else        reqErr.style.display  = 'none';
+
+                if (!bnk) { bankErr.style.display = 'block'; valid = false; }
+                else        bankErr.style.display = 'none';
+
+                if (!valid) { haptic('error'); return; }
+
+                tg.sendData(JSON.stringify({ order_id: orderId, currency, requisites: req, bank: bnk }));
+            } else {
+                tg.sendData(JSON.stringify({ order_id: orderId, currency: 'XTR' }));
+            }
+
+            this.disabled = true;
+            haptic('success');
+            document.getElementById('successOverlay').classList.add('visible');
+            setTimeout(() => tg.close(), 2500);
         });
-
-        tg.sendData(payload);
-      } else {
-        const payload = JSON.stringify({
-          order_id: orderId,
-          currency: 'XTR'
-        });
-
-        tg.sendData(payload);
-      }
-
-      btn.disabled = true;
-      document.getElementById('successOverlay').classList.add('visible');
-
-      setTimeout(function () {
-        tg.close();
-      }, 2500);
-    });
-  </script>
+    </script>
 </body>
 </html>
