@@ -99,6 +99,7 @@
         }
 
         .field-label {
+            display: block;
             font-size: 13px;
             font-weight: 600;
             color: var(--hint);
@@ -138,7 +139,7 @@
 
         .error-msg {
             font-size: 13px;
-            color: #ff5252;
+            color: #ff6b6b;
             padding: 3px 4px 10px;
             display: none;
         }
@@ -270,26 +271,35 @@
     </div>
 
     <script>
+    (function() {
+        const CURRENCY_XTR = 'XTR';
+
+        function escapeHtml(str) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+            return str.replace(/[&<>"']/g, c => map[c]);
+        }
+
         const tg = window.Telegram && window.Telegram.WebApp;
 
-        if (!tg || !tg.initData) {
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            tg.setHeaderColor('secondary_bg_color');
+            tg.setBackgroundColor('bg_color');
+        }
+
+        if (!tg) {
             document.getElementById('app').innerHTML = `
                 <div class="blocked">
                     <div class="blocked-icon">🔒</div>
-                    <div class="blocked-title">Доступ запрещён</div>
-                    <div class="blocked-text">Эта страница доступна только<br>через Telegram Mini App.</div>
-                </div>
-            `;
-            throw new Error('Not a Telegram Mini App');
+                    <div class="blocked-title">Недоступно</div>
+                    <div class="blocked-text">Откройте эту страницу через Telegram.</div>
+                </div>`;
+            return;
         }
 
-        tg.ready();
-        tg.expand();
-        tg.setHeaderColor('secondary_bg_color');
-        tg.setBackgroundColor('bg_color');
-
         function haptic(type) {
-            if (tg && tg.HapticFeedback) {
+            if (tg.HapticFeedback) {
                 if (type === 'light')  tg.HapticFeedback.impactOccurred('light');
                 if (type === 'error')  tg.HapticFeedback.notificationOccurred('error');
                 if (type === 'success') tg.HapticFeedback.notificationOccurred('success');
@@ -299,15 +309,16 @@
         const params   = new URLSearchParams(window.location.search);
         const currency = params.get('currency') || '';
         const orderId  = params.get('order_id') || '';
-        const isXtr    = currency === 'XTR';
+        const isXtr    = currency === CURRENCY_XTR;
 
-        const currencyLabel = isXtr ? '⭐ Telegram Stars' : (currency || 'RUB');
+        const safeOrderId    = escapeHtml(orderId);
+        const currencyLabel  = isXtr ? '⭐ Telegram Stars' : escapeHtml(currency || 'RUB');
 
         document.getElementById('app').innerHTML = `
             <div class="header-widget">
                 <div class="header-icon ${isXtr ? 'icon-xtr' : 'icon-rub'}">${isXtr ? '⭐' : '💳'}</div>
                 <div class="header-title">Оформление возврата</div>
-                <div class="header-subtitle">Заказ #${orderId} &middot; ${currencyLabel}</div>
+                <div class="header-subtitle">Заказ #${safeOrderId} &middot; ${currencyLabel}</div>
             </div>
 
             ${isXtr ? `
@@ -321,18 +332,20 @@
                 </div>
             ` : `
                 <div class="form-section">
-                    <div class="field-label">Номер карты или СБП</div>
+                    <label class="field-label" for="requisites">Номер карты или СБП</label>
                     <div class="field-group">
                         <input class="field-input" id="requisites" type="text"
                             placeholder="4276 1234 5678 9012 или +79001234567"
+                            aria-label="Номер карты или телефон СБП"
                             inputmode="text" autocomplete="off" />
                     </div>
                     <div class="error-msg" id="reqError">Введите номер карты или СБП</div>
 
-                    <div class="field-label">Название банка</div>
+                    <label class="field-label" for="bank">Название банка</label>
                     <div class="field-group">
                         <input class="field-input" id="bank" type="text"
                             placeholder="Сбербанк, Т-Банк, ВТБ..."
+                            aria-label="Название банка"
                             autocomplete="off" />
                     </div>
                     <div class="error-msg" id="bankError">Введите название банка</div>
@@ -344,6 +357,9 @@
         `;
 
         document.getElementById('submitBtn').addEventListener('click', function () {
+            const btn = this;
+            const originalText = btn.textContent;
+
             if (!isXtr) {
                 const req     = document.getElementById('requisites').value.trim();
                 const bnk     = document.getElementById('bank').value.trim();
@@ -351,24 +367,51 @@
                 const bankErr = document.getElementById('bankError');
                 let valid = true;
 
-                if (!req) { reqErr.style.display  = 'block'; valid = false; }
-                else        reqErr.style.display  = 'none';
+                const stripped = req.replace(/[\s\-]/g, '');
+                const isCard  = /^\d{16,19}$/.test(stripped);
+                const isPhone = /^\+7\d{10}$/.test(req.replace(/[\s\-()]/g, ''));
+
+                if (!req) {
+                    reqErr.textContent = 'Введите номер карты или СБП';
+                    reqErr.style.display = 'block'; valid = false;
+                } else if (!isCard && !isPhone) {
+                    reqErr.textContent = 'Введите номер карты (16–19 цифр) или телефон СБП (+7...)';
+                    reqErr.style.display = 'block'; valid = false;
+                } else {
+                    reqErr.style.display = 'none';
+                }
 
                 if (!bnk) { bankErr.style.display = 'block'; valid = false; }
                 else        bankErr.style.display = 'none';
 
                 if (!valid) { haptic('error'); return; }
 
-                tg.sendData(JSON.stringify({ order_id: orderId, currency, requisites: req, bank: bnk }));
+                try {
+                    tg.sendData(JSON.stringify({ order_id: orderId, currency, requisites: req, bank: bnk }));
+                } catch (e) {
+                    haptic('error');
+                    btn.textContent = 'Ошибка. Попробуйте ещё раз.';
+                    setTimeout(() => { btn.textContent = originalText; }, 2000);
+                    return;
+                }
             } else {
-                tg.sendData(JSON.stringify({ order_id: orderId, currency: 'XTR' }));
+                try {
+                    tg.sendData(JSON.stringify({ order_id: orderId, currency: CURRENCY_XTR }));
+                } catch (e) {
+                    haptic('error');
+                    btn.textContent = 'Ошибка. Попробуйте ещё раз.';
+                    setTimeout(() => { btn.textContent = originalText; }, 2000);
+                    return;
+                }
             }
 
-            this.disabled = true;
+            btn.disabled = true;
+            btn.textContent = 'Отправка...';
             haptic('success');
             document.getElementById('successOverlay').classList.add('visible');
-            setTimeout(() => tg.close(), 2500);
+            setTimeout(() => { if (tg && tg.close) tg.close(); }, 2500);
         });
+    })();
     </script>
 </body>
 </html>
