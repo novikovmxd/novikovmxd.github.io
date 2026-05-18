@@ -19,6 +19,8 @@
             --header-bg: var(--tg-theme-header-bg-color, #282e33);
             --section-bg: var(--tg-theme-section-bg-color, #282e33);
             --subtitle: var(--tg-theme-subtitle-text-color, #82868a);
+            --good: #31a357;
+            --bad: #ff5252;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -35,6 +37,7 @@
         .app {
             max-width: 480px;
             margin: 0 auto;
+            padding-bottom: max(16px, env(safe-area-inset-bottom));
         }
 
         @keyframes fadeInUp {
@@ -47,10 +50,30 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 32px 16px 28px;
+            padding: 28px 16px 24px;
             text-align: center;
             background: var(--secondary-bg);
+            margin: 8px 12px;
+            border-radius: 14px;
             animation: fadeInUp 0.3s ease both;
+        }
+
+        .header-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--button) 0%, color-mix(in srgb, var(--button) 70%, #000) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+        }
+
+        .header-icon svg {
+            width: 32px;
+            height: 32px;
+            color: var(--button-text);
         }
 
         .header-title {
@@ -98,6 +121,16 @@
             border-radius: 12px;
             margin-bottom: 16px;
             overflow: hidden;
+            box-shadow: inset 0 0 0 1px transparent;
+            transition: box-shadow 0.15s ease;
+        }
+
+        .field-group:focus-within {
+            box-shadow: inset 0 0 0 1.5px var(--button);
+        }
+
+        .field-group.has-error {
+            box-shadow: inset 0 0 0 1.5px var(--bad);
         }
 
         .field-input {
@@ -124,9 +157,27 @@
 
         .error-msg {
             font-size: 13px;
-            color: #ff6b6b;
+            color: var(--bad);
             padding: 3px 4px 10px;
             display: none;
+            align-items: center;
+            gap: 6px;
+            line-height: 1.3;
+        }
+
+        .error-msg.show {
+            display: flex;
+            animation: fadeInUp 0.2s ease both;
+        }
+
+        .error-msg::before {
+            content: '';
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+            background-color: var(--bad);
+            -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='black' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2Zm0 15a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm1-4.5a1 1 0 0 1-2 0v-4a1 1 0 0 1 2 0v4Z'/></svg>") center/contain no-repeat;
+            mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='black' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2Zm0 15a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm1-4.5a1 1 0 0 1-2 0v-4a1 1 0 0 1 2 0v4Z'/></svg>") center/contain no-repeat;
         }
 
         /* ===== SUBMIT ===== */
@@ -176,13 +227,19 @@
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #6dd98e 0%, #35c759 100%);
+            background: linear-gradient(135deg, #6dd98e 0%, var(--good) 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 36px;
             margin-bottom: 20px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+            animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.5); }
+            to   { opacity: 1; transform: scale(1); }
         }
 
         .overlay-title {
@@ -299,15 +356,18 @@
         const safeOrderId    = escapeHtml(orderId);
         const currencyLabel  = isXtr ? '⭐ Telegram Stars' : escapeHtml(currency || 'RUB');
 
+        const HEADER_ICON = `<svg viewBox="0 0 24 24" fill="none"><path d="M12 4v3m0 0L8.5 10.5M12 7l3.5 3.5M5 13h14a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
         document.getElementById('app').innerHTML = `
             <div class="header-widget">
+                <div class="header-icon">${HEADER_ICON}</div>
                 <div class="header-title">Оформление возврата</div>
                 <div class="header-subtitle">Заказ #${safeOrderId} &middot; ${currencyLabel}</div>
             </div>
 
             ${isXtr ? `
                 <div class="xtr-note">
-                    Платёж был произведён в Telegram Stars.<br>
+                    Платёж был произведён в Telegram Stars.
                 </div>
                 <div class="submit-wrap" style="padding-top:24px">
                     <button class="submit-btn" id="submitBtn">Подать заявку</button>
@@ -315,22 +375,22 @@
             ` : `
                 <div class="form-section">
                     <label class="field-label" for="requisites">Номер карты или СБП</label>
-                    <div class="field-group">
+                    <div class="field-group" id="reqGroup">
                         <input class="field-input" id="requisites" type="text"
                             placeholder="4276 1234 5678 9012 или +79001234567"
                             aria-label="Номер карты или телефон СБП"
                             inputmode="text" autocomplete="off" />
                     </div>
-                    <div class="error-msg" id="reqError">Введите номер карты или СБП</div>
+                    <div class="error-msg" id="reqError" role="alert"><span>Введите номер карты или СБП</span></div>
 
                     <label class="field-label" for="bank">Название банка</label>
-                    <div class="field-group">
+                    <div class="field-group" id="bankGroup">
                         <input class="field-input" id="bank" type="text"
                             placeholder="Сбербанк, Т-Банк, ВТБ..."
                             aria-label="Название банка"
                             autocomplete="off" />
                     </div>
-                    <div class="error-msg" id="bankError">Введите название банка</div>
+                    <div class="error-msg" id="bankError" role="alert"><span>Введите название банка</span></div>
                 </div>
                 <div class="submit-wrap">
                     <button class="submit-btn" id="submitBtn">Отправить заявку</button>
@@ -343,28 +403,44 @@
             const originalText = btn.textContent;
 
             if (!isXtr) {
-                const req     = document.getElementById('requisites').value.trim();
-                const bnk     = document.getElementById('bank').value.trim();
-                const reqErr  = document.getElementById('reqError');
-                const bankErr = document.getElementById('bankError');
+                const req       = document.getElementById('requisites').value.trim();
+                const bnk       = document.getElementById('bank').value.trim();
+                const reqErr    = document.getElementById('reqError');
+                const bankErr   = document.getElementById('bankError');
+                const reqGroup  = document.getElementById('reqGroup');
+                const bankGroup = document.getElementById('bankGroup');
                 let valid = true;
 
                 const stripped = req.replace(/[\s\-]/g, '');
                 const isCard  = /^\d{16,19}$/.test(stripped);
                 const isPhone = /^\+7\d{10}$/.test(req.replace(/[\s\-()]/g, ''));
 
-                if (!req) {
-                    reqErr.textContent = 'Введите номер карты или СБП';
-                    reqErr.style.display = 'block'; valid = false;
-                } else if (!isCard && !isPhone) {
-                    reqErr.textContent = 'Введите номер карты (16–19 цифр) или телефон СБП (+7...)';
-                    reqErr.style.display = 'block'; valid = false;
-                } else {
-                    reqErr.style.display = 'none';
+                function setError(group, msgEl, text) {
+                    msgEl.querySelector('span').textContent = text;
+                    msgEl.classList.add('show');
+                    group.classList.add('has-error');
+                }
+                function clearError(group, msgEl) {
+                    msgEl.classList.remove('show');
+                    group.classList.remove('has-error');
                 }
 
-                if (!bnk) { bankErr.style.display = 'block'; valid = false; }
-                else        bankErr.style.display = 'none';
+                if (!req) {
+                    setError(reqGroup, reqErr, 'Введите номер карты или СБП');
+                    valid = false;
+                } else if (!isCard && !isPhone) {
+                    setError(reqGroup, reqErr, 'Введите номер карты (16–19 цифр) или телефон СБП (+7...)');
+                    valid = false;
+                } else {
+                    clearError(reqGroup, reqErr);
+                }
+
+                if (!bnk) {
+                    setError(bankGroup, bankErr, 'Введите название банка');
+                    valid = false;
+                } else {
+                    clearError(bankGroup, bankErr);
+                }
 
                 if (!valid) { haptic('error'); return; }
 
