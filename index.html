@@ -330,7 +330,7 @@
             tg.setBackgroundColor('bg_color');
         }
 
-        if (!tg) {
+        if (!tg || !tg.initData) {
             document.getElementById('app').innerHTML = `
                 <div class="blocked">
                     <div class="blocked-icon">🔒</div>
