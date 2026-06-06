@@ -395,6 +395,7 @@
                 try {
                     tg.sendData(JSON.stringify({ order_id: orderId, currency, requisites: req, bank: bnk }));
                 } catch (e) {
+                    alert('DEBUG: ' + e.message); // временно для диагностики
                     haptic('error');
                     btn.textContent = 'Ошибка. Попробуйте ещё раз.';
                     setTimeout(() => { btn.textContent = originalText; }, 2000);
@@ -404,6 +405,7 @@
                 try {
                     tg.sendData(JSON.stringify({ order_id: orderId, currency: CURRENCY_XTR }));
                 } catch (e) {
+                    alert('DEBUG: ' + e.message); // временно для диагностики
                     haptic('error');
                     btn.textContent = 'Ошибка. Попробуйте ещё раз.';
                     setTimeout(() => { btn.textContent = originalText; }, 2000);
