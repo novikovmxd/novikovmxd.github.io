@@ -279,11 +279,19 @@
 
         const tg = window.Telegram && window.Telegram.WebApp;
 
+        // Каждый вызов обёрнут отдельно: в старых версиях Telegram часть
+        // методов (setHeaderColor/setBackgroundColor/expand) отсутствует и
+        // выбрасывает исключение. Раньше это прерывало скрипт ДО отрисовки
+        // формы — и пользователь видел пустой экран.
+        function safe(fn) {
+            try { fn(); } catch (e) { /* метод не поддерживается — игнорируем */ }
+        }
+
         if (tg) {
-            tg.ready();
-            tg.expand();
-            tg.setHeaderColor('secondary_bg_color');
-            tg.setBackgroundColor('bg_color');
+            safe(() => tg.ready());
+            safe(() => tg.expand());
+            if (typeof tg.setHeaderColor === 'function')     safe(() => tg.setHeaderColor('secondary_bg_color'));
+            if (typeof tg.setBackgroundColor === 'function') safe(() => tg.setBackgroundColor('bg_color'));
         }
 
         function haptic(type) {
@@ -322,15 +330,15 @@
                 </div>
             ` : `
                 <div class="form-section">
-                    <div class="section-header">Реквизиты для возврата</div>
+                    <div class="section-header">Реквизиты для возврата (СБП)</div>
                     <div class="fields-block">
                         <div class="field-row" id="reqGroup">
-                            <input class="field-input" id="requisites" type="text"
-                                placeholder="Номер карты или телефон СБП"
-                                aria-label="Номер карты или телефон СБП"
-                                inputmode="text" autocomplete="off" />
+                            <input class="field-input" id="requisites" type="tel"
+                                placeholder="Номер телефона (+7...)"
+                                aria-label="Номер телефона для возврата по СБП"
+                                inputmode="tel" autocomplete="tel" />
                         </div>
-                        <div class="error-inline" id="reqError"><span>Введите номер карты или СБП</span></div>
+                        <div class="error-inline" id="reqError"><span>Введите номер телефона</span></div>
                         <div class="field-row" id="bankGroup">
                             <input class="field-input" id="bank" type="text"
                                 placeholder="Название банка"
@@ -346,9 +354,31 @@
             `}
         `;
 
+        // Единая точка отправки. Возвращает true при успехе.
+        // Показывает понятную ошибку, если приложение открыто вне Telegram
+        // (тогда tg.sendData недоступен) или отправка не удалась.
+        function sendData(payload) {
+            const btn = document.getElementById('submitBtn');
+            const originalText = btn.textContent;
+            if (!tg || typeof tg.sendData !== 'function') {
+                haptic('error');
+                btn.textContent = 'Откройте через Telegram';
+                setTimeout(() => { btn.textContent = originalText; }, 2500);
+                return false;
+            }
+            try {
+                tg.sendData(JSON.stringify(payload));
+                return true;
+            } catch (e) {
+                haptic('error');
+                btn.textContent = 'Ошибка. Попробуйте ещё раз.';
+                setTimeout(() => { btn.textContent = originalText; }, 2000);
+                return false;
+            }
+        }
+
         document.getElementById('submitBtn').addEventListener('click', function () {
             const btn = this;
-            const originalText = btn.textContent;
 
             if (!isXtr) {
                 const req       = document.getElementById('requisites').value.trim();
@@ -359,8 +389,6 @@
                 const bankGroup = document.getElementById('bankGroup');
                 let valid = true;
 
-                const stripped = req.replace(/[\s\-]/g, '');
-                const isCard  = /^\d{16,19}$/.test(stripped);
                 const isPhone = /^\+7\d{10}$/.test(req.replace(/[\s\-()]/g, ''));
 
                 function setError(group, msgEl, text) {
@@ -374,10 +402,10 @@
                 }
 
                 if (!req) {
-                    setError(reqGroup, reqErr, 'Введите номер карты или СБП');
+                    setError(reqGroup, reqErr, 'Введите номер телефона');
                     valid = false;
-                } else if (!isCard && !isPhone) {
-                    setError(reqGroup, reqErr, 'Номер карты (16–19 цифр) или телефон СБП (+7...)');
+                } else if (!isPhone) {
+                    setError(reqGroup, reqErr, 'Номер телефона в формате +7XXXXXXXXXX');
                     valid = false;
                 } else {
                     clearError(reqGroup, reqErr);
@@ -392,25 +420,9 @@
 
                 if (!valid) { haptic('error'); return; }
 
-                try {
-                    tg.sendData(JSON.stringify({ order_id: orderId, currency, requisites: req, bank: bnk }));
-                } catch (e) {
-                    alert('DEBUG: ' + e.message); // временно для диагностики
-                    haptic('error');
-                    btn.textContent = 'Ошибка. Попробуйте ещё раз.';
-                    setTimeout(() => { btn.textContent = originalText; }, 2000);
-                    return;
-                }
+                if (!sendData({ order_id: orderId, currency, requisites: req, bank: bnk })) return;
             } else {
-                try {
-                    tg.sendData(JSON.stringify({ order_id: orderId, currency: CURRENCY_XTR }));
-                } catch (e) {
-                    alert('DEBUG: ' + e.message); // временно для диагностики
-                    haptic('error');
-                    btn.textContent = 'Ошибка. Попробуйте ещё раз.';
-                    setTimeout(() => { btn.textContent = originalText; }, 2000);
-                    return;
-                }
+                if (!sendData({ order_id: orderId, currency: CURRENCY_XTR })) return;
             }
 
             btn.disabled = true;
